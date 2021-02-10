@@ -1,18 +1,24 @@
-from flask import Flask, request
+from flask import Flask, request, render_template
 
-app = Flask(__file__)
+
+app = Flask(__name__, template_folder='template')
+
+@app.errorhandler(404)
+def page_notfound():
+    return render_template('error.html')
 
 @app.route('/')
+@app.route('/home/')
 def get_home():
-    return render_template('resource/index.html')
+    return render_template('index.html')
 
 @app.route('/contact')
 def get_contactinfor():
-    return render_template('resource/contact.html')
+    return render_template('contact.html')
 
-@app.route('/userregister')
+@app.route('/register')
 def reg_user():
-    return render_template('resource/user_registration.html')
+    return render_template('registration.html')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80)
+    app.run(port= 5555, debug = True)

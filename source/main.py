@@ -18,28 +18,26 @@ def get_contactinfor():
 
 @app.route('/register', methods=['GET'])
 def reg_user():
+    return render_template('registration.html')
+
+@app.route('/register', methods=['POST'])
+def get_user():
     name = request.form.get('name')
     age = request.form.get('age')
     gender = request.form.get('gender')
     city = request.form.get('city')
-    html_message = f'''<!DOCTYPE html>
+    with open("userdata.csv", "a") as file_name:
+        file_name.write("{};{};{};{}".format(name, age, gender, city))
+    if os.path.exists("template\success.html"):
+        os.remove("template\success.html")
+    with open("template\success.html", "w") as data:
+        data.write(f'''<!DOCTYPE html>
                 <html>
                 <title>Sucess !!!!!</title>
                 <body style="background-color: green;">
                 <h1 align="center">Registration Completed</h1>
                 <h2> You have registered with name {name} age {age} gender {gender} and city {city} </h2>
-                </html>'''
-    get_user(html_message)
-    with open("userdata.csv", "a") as file_name:
-        file_name.write("{};{};{};{}".format(name, age, gender, city))
-    return render_template('registration.html')
-
-@app.route('/register', methods=['POST'])
-def get_user(html_message):
-    if os.path.exists("template\success.html"):
-        os.remove("template\success.html")
-    with open("template\success.html", "w") as data:
-        data.write(html_message)
+                </html>''')
     return render_template('success.html')
 
 @app.route('/list')

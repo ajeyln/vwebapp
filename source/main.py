@@ -33,6 +33,9 @@ def get_user():
     # c.execute('''create table users(NAME varchar(15) primary key, AGE integer,\
              # GENDER varchar(15), CITY varchar(15))''')
     c.execute(f"insert into users values(\"{name}\", {age}, \"{gender}\", \"{city}\")")
+    return create_html(name, age, gender, city)
+
+def create_html(name, age, gender, city):
     if os.path.exists("template\success.html"):
         os.remove("template\success.html")
     with open("template\success.html", "w") as data:

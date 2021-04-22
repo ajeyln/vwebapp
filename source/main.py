@@ -1,5 +1,6 @@
 from flask import Flask, request, render_template
 import os
+import sqlite3
 
 app = Flask(__name__, template_folder='template')
 
@@ -26,8 +27,12 @@ def get_user():
     age = request.form.get('age')
     gender = request.form.get('gender')
     city = request.form.get('city')
-    with open("userdata.csv", "a") as file_name:
-        file_name.write("{};{};{};{}".format(name, age, gender, city))
+    conn = sqlite3.connect('user_data.db')
+    c = conn.cursor()
+    # while creating the data base first time
+    # c.execute('''create table users(NAME varchar(15) primary key, AGE integer,\
+             # GENDER varchar(15), CITY varchar(15))''')
+    c.execute(f"insert into users values(\"{name}\", {age}, \"{gender}\", \"{city}\")")
     if os.path.exists("template\success.html"):
         os.remove("template\success.html")
     with open("template\success.html", "w") as data:
@@ -45,4 +50,5 @@ def user_list():
     return render_template('userdata.csv')
 
 if __name__ == '__main__':
+
     app.run(port= 5555, debug = True)

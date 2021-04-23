@@ -35,10 +35,7 @@ def get_user():
                 FIRST_NAME varchar(15), SECOND_NAME varchar(15), AGE integer,\
                 GENDER varchar(15), CITY varchar(15))''')
     c.execute(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\')")
-    c.execute('PRAGMA table_info(users)')
-    dummy_list_header = [list(x) for x in c.fetchall()]
-    list_header = [dummy_list_header[y][1] for y in range(0, len(dummy_list_header))]
-    print(list_header)
+    print(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\')")
     return create_html(srno, first, second, age, gender, city)
 
 def create_html(srno, first, second, age, gender, city):
@@ -57,12 +54,77 @@ def create_html(srno, first, second, age, gender, city):
                 Age: {age} <br />
                 Gender: {gender} <br />
                 City: {city} </h2>
+                <button  onclick="window.location.href='/register';">
+                <h3 align = "center">OK</h3>
                 </html>''')
     return render_template('success.html')
 
 @app.route('/list', methods= ['GET'])
 def user_list():
-    return render_template('user details.html')
+    if os.path.exists("userlist.html"):
+        os.remove("userlist.html")
+    conn = sqlite3.connect('user_data.db')
+    c = conn.cursor()
+    c.execute('PRAGMA table_info(users)')
+    dummy_list_header = [list(x) for x in c.fetchall()]
+    list_header = [dummy_list_header[y][1] for y in range(0, len(dummy_list_header))]
+    with open("userlist.html", "w") as head:
+        head.write(f'''<!DOCTYPE html>
+                <html>
+                <title>Registered Details</title>)
+                <head>
+                <style>
+                table 
+                tr:nth-child(even)
+                </style>
+                </head>
+                <body>
+                <h2> USER DETAILS </h2>
+                <table>
+                    <tr>
+                        <th>{list_header[0]}</th>
+                        <th>{list_header[1]}</th>
+                        <th>{list_header[2]}</th>
+                        <th>{list_header[3]}</th>
+                        <th>{list_header[4]}</th>
+                        <th>{list_header[5]}</th>
+                    </tr> ''')
+    with open("userlist.html", "a") as column:
+        list_column = create_list_column()
+        for i in range(0, len(list_column)):
+            column.write(f'''
+                    <tr>
+                        <th>{list_column[i][0]}</th>
+                        <th>{list_column[i][1]}</th>
+                        <th>{list_column[i][2]}</th>
+                        <th>{list_column[i][3]}</th>
+                        <th>{list_column[i][4]}</th>
+                        <th>{list_column[i][5]}</th>
+                    </tr>
+                    ''')
+            print(list_column[i][0])
+            print(list_column[i][1])
+            print(list_column[i][2])
+            print(list_column[i][3])
+            print(list_column[i][4])
+            print(list_column[i][5])
+            
+    with open("userlist.html", "a") as conclusion:
+        conclusion.write(f'''</table>
+                        </body>
+                        </html>''')
+    return render_template('userlist.html')
+
+def create_list_column():
+    conn = sqlite3.connect('user_data.db')
+    c = conn.cursor()
+    c.execute("Select * from users")
+    print(c.fetchall)
+    list_values = [list(z) for z in c.fetchall()]
+    return (list_values)
+
+def user_details_html():
+    return render_template('user_details.html')
 
 if __name__ == '__main__':
 

@@ -23,19 +23,25 @@ def reg_user():
 
 @app.route('/register', methods=['POST'])
 def get_user():
-    name = request.form.get('name')
+    srno = request.form.get('Index Number')
+    first = request.form.get('First Name')
+    second = request.form.get('Second Name')
     age = request.form.get('age')
     gender = request.form.get('gender')
     city = request.form.get('city')
     conn = sqlite3.connect('user_data.db')
     c = conn.cursor()
-    # while creating the data base first time
-    # c.execute('''create table users(NAME varchar(15) primary key, AGE integer,\
-             # GENDER varchar(15), CITY varchar(15))''')
-    c.execute(f"insert into users values(\"{name}\", {age}, \"{gender}\", \"{city}\")")
-    return create_html(name, age, gender, city)
+    c.execute('''CREATE TABLE IF NOT EXISTS users (SR_No integer primary key,\
+                FIRST_NAME varchar(15), SECOND_NAME varchar(15), AGE integer,\
+                GENDER varchar(15), CITY varchar(15))''')
+    c.execute(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\')")
+    c.execute('PRAGMA table_info(users)')
+    dummy_list_header = [list(x) for x in c.fetchall()]
+    list_header = [dummy_list_header[y][1] for y in range(0, len(dummy_list_header))]
+    print(list_header)
+    return create_html(srno, first, second, age, gender, city)
 
-def create_html(name, age, gender, city):
+def create_html(srno, first, second, age, gender, city):
     if os.path.exists("template\success.html"):
         os.remove("template\success.html")
     with open("template\success.html", "w") as data:
@@ -44,13 +50,19 @@ def create_html(name, age, gender, city):
                 <title>Sucess !!!!!</title>
                 <body style="background-color: green;">
                 <h1 align="center">Registration Completed</h1>
-                <h2> You have registered with name {name} age {age} gender {gender} and city {city} </h2>
+                <h2> You have registered with following details : <br />
+                Index Number: {srno} <br />
+                First Name: {first} <br />
+                Second Name: {second} <br />
+                Age: {age} <br />
+                Gender: {gender} <br />
+                City: {city} </h2>
                 </html>''')
     return render_template('success.html')
 
-@app.route('/list')
+@app.route('/list', methods= ['GET'])
 def user_list():
-    return render_template('userdata.csv')
+    return render_template('user details.html')
 
 if __name__ == '__main__':
 

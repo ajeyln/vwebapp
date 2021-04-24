@@ -29,16 +29,13 @@ def get_user():
     age = request.form.get('age')
     gender = request.form.get('gender')
     city = request.form.get('city')
+    insert_values(srno, first, second, age, gender, city)
+    return create_html(srno, first, second, age, gender, city)
+
+def create_db():
     conn = sqlite3.connect('user_data.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (SR_No integer primary key AUTOINCREMENT,\
-                FIRST_NAME varchar(15), SECOND_NAME varchar(15), AGE integer,\
-                GENDER varchar(15), CITY varchar(15))''')
-    c.execute(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\');")
-    print(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\')")
-    c.execute("Select * from users;")
-    print(c.fetchall())
-    return create_html(srno, first, second, age, gender, city)
+    return c
 
 def create_html(srno, first, second, age, gender, city):
     if os.path.exists("template\success.html"):
@@ -61,16 +58,31 @@ def create_html(srno, first, second, age, gender, city):
                 </html>''')
     return render_template('success.html')
 
+def get_header():
+    c = create_db()
+    c.execute('''CREATE TABLE IF NOT EXISTS users (SR_No integer primary key AUTOINCREMENT,\
+                FIRST_NAME varchar(15), SECOND_NAME varchar(15), AGE integer,\
+                GENDER varchar(15), CITY varchar(15))''')
+    c.execute("SELECT name FROM sqlite_master WHERE type='table';")
+    c.execute('PRAGMA table_info(users)')
+    dummy_list_header = [list(x) for x in c.fetchall()]
+    list_header = [dummy_list_header[y][1] for y in range(0, len(dummy_list_header))]
+    return list_header
+
+def insert_values(srno, first, second, age, gender, city):
+    c = create_db()
+    c.execute(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\');")
+    print(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\')")
+    c.execute("Select * from users;")
+    print(c.fetchall())
+    return c.fetchall()
+
 @app.route('/list', methods= ['GET'])
 def user_list():
     if os.path.exists("userlist.html"):
         os.remove("userlist.html")
-    conn = sqlite3.connect('user_data.db')
-    c = conn.cursor()
-    c.execute('PRAGMA table_info(users)')
-    c.execute("Select * from users;")
-    dummy_list_header = [list(x) for x in c.fetchall()]
-    list_header = [dummy_list_header[y][1] for y in range(0, len(dummy_list_header))]
+    c = create_db()
+    list_header = get_header()
     with open("userlist.html", "w") as head:
         head.write(f'''<!DOCTYPE html>
                 <html>
@@ -92,17 +104,20 @@ def user_list():
                         <th>{list_header[4]}</th>
                         <th>{list_header[5]}</th>
                     </tr> ''')
+    list_column = []
+    c.execute("Select * from users;")
+    for i in (c.fetchall()):
+        list_column.append(i)
     with open("userlist.html", "a") as column:
-        list_column = create_list_column()
-        for i in range(0, len(list_column)):
+        for j in (0, len(list_column)):
             column.write(f'''
                     <tr>
-                        <td>{list_column[i][0]}</td>
-                        <td>{list_column[i][1]}</td>
-                        <td>{list_column[i][2]}</td>
-                        <td>{list_column[i][3]}</td>
-                        <td>{list_column[i][4]}</td>
-                        <td>{list_column[i][5]}</td>
+                        <td>{list_column[j][0]}</td>
+                        <td>{list_column[j][1]}</td>
+                        <td>{list_column[j][2]}</td>
+                        <td>{list_column[j][3]}</td>
+                        <td>{list_column[j][4]}</td>
+                        <td>{list_column[j][5]}</td>
                     </tr>
                     ''')
             

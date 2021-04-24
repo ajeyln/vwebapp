@@ -31,11 +31,13 @@ def get_user():
     city = request.form.get('city')
     conn = sqlite3.connect('user_data.db')
     c = conn.cursor()
-    c.execute('''CREATE TABLE IF NOT EXISTS users (SR_No integer primary key,\
+    c.execute('''CREATE TABLE IF NOT EXISTS users (SR_No integer primary key AUTOINCREMENT,\
                 FIRST_NAME varchar(15), SECOND_NAME varchar(15), AGE integer,\
                 GENDER varchar(15), CITY varchar(15))''')
-    c.execute(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\')")
+    c.execute(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\');")
     print(f"insert into users values({srno}, \'{first}\', \'{second}\', {age}, \'{gender}\', \'{city}\')")
+    c.execute("Select * from users;")
+    print(c.fetchall())
     return create_html(srno, first, second, age, gender, city)
 
 def create_html(srno, first, second, age, gender, city):
@@ -66,6 +68,7 @@ def user_list():
     conn = sqlite3.connect('user_data.db')
     c = conn.cursor()
     c.execute('PRAGMA table_info(users)')
+    c.execute("Select * from users;")
     dummy_list_header = [list(x) for x in c.fetchall()]
     list_header = [dummy_list_header[y][1] for y in range(0, len(dummy_list_header))]
     with open("userlist.html", "w") as head:
@@ -94,20 +97,14 @@ def user_list():
         for i in range(0, len(list_column)):
             column.write(f'''
                     <tr>
-                        <th>{list_column[i][0]}</th>
-                        <th>{list_column[i][1]}</th>
-                        <th>{list_column[i][2]}</th>
-                        <th>{list_column[i][3]}</th>
-                        <th>{list_column[i][4]}</th>
-                        <th>{list_column[i][5]}</th>
+                        <td>{list_column[i][0]}</td>
+                        <td>{list_column[i][1]}</td>
+                        <td>{list_column[i][2]}</td>
+                        <td>{list_column[i][3]}</td>
+                        <td>{list_column[i][4]}</td>
+                        <td>{list_column[i][5]}</td>
                     </tr>
                     ''')
-            print(list_column[i][0])
-            print(list_column[i][1])
-            print(list_column[i][2])
-            print(list_column[i][3])
-            print(list_column[i][4])
-            print(list_column[i][5])
             
     with open("userlist.html", "a") as conclusion:
         conclusion.write(f'''</table>

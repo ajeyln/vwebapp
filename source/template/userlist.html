@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+   <body>
+   
+      <table border = 1>
+         <thead>
+            <td>SR_No</td>
+            <td>FIRST_NAME</td>
+            <td>SECOND_NAME</td>
+            <td>AGE</td>
+            <td>GENDER</td>
+            <td>CITY</td>
+         </thead>
+         
+         {% for row in rows %}
+            <tr>
+            <td>{{row["SR_No"]}}</td>
+            <td>{{row["FIRST_NAME"]}}</td>
+            <td>{{row["SECOND_NAME"]}}</td>
+            <td>{{row["AGE"]}}</td>
+            <td> {{ row["GENDER"]}}</td>
+            <td>{{row['CITY']}}</td>	
+            </tr>
+         {% endfor %}
+      </table>
+      
+      <a href = "/">Go back to home page</a>
+      
+   </body>
+</html>

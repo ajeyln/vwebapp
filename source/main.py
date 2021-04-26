@@ -1,6 +1,9 @@
 from flask import Flask, request, render_template
-import os, time
+import os, os.path
 import sqlite3
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+db_path = os.path.join(BASE_DIR, "user_data.db")
 
 app = Flask(__name__, template_folder='template')
 
@@ -11,6 +14,7 @@ def page_notfound():
 @app.route('/')
 @app.route('/home/')
 def get_home():
+    get_header()
     return render_template('index.html')
 
 @app.route('/contact')
@@ -18,13 +22,12 @@ def get_contactinfor():
     return render_template('contact.html')
 
 def get_header():
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(db_path)
     print('Opened database successfully')
     conn.execute('''CREATE TABLE IF NOT EXISTS users (SR_No integer primary key AUTOINCREMENT,\
                 FIRST_NAME varchar(15), SECOND_NAME varchar(15), AGE integer,\
                 GENDER varchar(15), CITY varchar(15))''')
     print("Table created successfully")
-    conn.close()
 
 @app.route('/register', methods=['GET'])
 def reg_user():
@@ -32,26 +35,66 @@ def reg_user():
 
 @app.route('/register', methods=['POST'])
 def get_user():
-    srno = request.form['Index Number']
-    first = request.form['First Name']
-    second = request.form['Second Name']
+    srno = request.form['srno']
+    first = request.form['first']
+    second = request.form['second']
     age = request.form['age']
     gender = request.form['gender']
     city = request.form['city']
-    get_header()
-    with sqlite3.connect("user_data.db") as con:
+
+    with sqlite3.connect(db_path) as con:
         cur = con.cursor()
-        cur.execute("INSERT INTO users (SR_NO,FIRST_NAME,SECOND_NAME,AGE,GENDER,CITY)\
-            VALUES (?,?,?,?,?,?)",(srno,first,second,age,gender,city))
+        cur.execute("INSERT INTO users (FIRST_NAME,SECOND_NAME,AGE,GENDER,CITY)\
+            VALUES (?,?,?,?,?)",(first,second,age,gender,city))
         con.commit()
         msg = "Record successfully added"
-        con.close()
+    return render_template('success.html', msg = msg)
+
+@app.route('/delete', methods=['GET'])
+def delete_user():
+    return render_template('delete.html')
+
+@app.route('/delete', methods = ["POST"])  
+def deleterecord():  
+    srno = request.form["srno"]  
+    with sqlite3.connect(db_path) as con:  
+        try:  
+            cur = con.cursor()
+            cur.execute("delete from users where SR_NO = ?",srno)  
+            msg = "record successfully deleted"  
+        except:  
+            msg = "can't be deleted"  
+        finally:  
+            return render_template("deleterecord.html",msg = msg)
+
+@app.route('/update', methods=['GET'])
+def update():
+    return render_template('update.html')
+
+@app.route('/update', methods= ['POST'])
+def update_user():
+    srno = request.form['srno']
+    first = request.form['first']
+    second = request.form['second']
+    age = request.form['age']
+    gender = request.form['gender']
+    city = request.form['city']
+    with sqlite3.connect(db_path) as con:  
+        try:  
+            cur = con.cursor()
+            cur.execute("UPDATE users SET FIRST_NAME = ?, SECOND_NAME = ?, AGE = ?, GENDER = ?,\
+                         CITY = ? where SR_NO = ?", (first,second,age,gender,city,srno) ) 
+            msg = "record successfully updated"  
+        except:  
+            msg = "can't be updated"  
+        finally:  
+            return render_template('updated.html', msg = msg)
 
 @app.route('/list', methods= ['GET'])
 def user_list():
     if os.path.exists("userlist.html"):
         os.remove("userlist.html")
-    con = sqlite3.connect("database.db")
+    con = sqlite3.connect(db_path)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
     cur.execute("select * from users")

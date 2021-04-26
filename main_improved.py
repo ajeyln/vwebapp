@@ -4,7 +4,7 @@ import sqlite3
 import os.path
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(BASE_DIR, "database.db")
+db_path = os.path.join(BASE_DIR, "user_data.db")
 
 app = Flask(__name__, template_folder='template')
 

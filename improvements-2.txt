@@ -1,0 +1,9 @@
+in root folder (where main.py) is there
+
+* files: this is a folder wehre you keep or generate downloadable files
+* static/images : folder for keeping images
+
+always use 
+
+- os.path.join(IMAGES_FOLDER, "svt.jpg")
+- os.path.join('static', 'images')

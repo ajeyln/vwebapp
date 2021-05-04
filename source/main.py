@@ -8,7 +8,7 @@ db_path = os.path.join(BASE_DIR, "user_data.db")
 app = Flask(__name__, template_folder='template')
 
 @app.errorhandler(404)
-def page_notfound():
+def page_notfound(self):
     return render_template('error.html')
 
 @app.route('/')
@@ -100,6 +100,33 @@ def user_list():
     cur.execute("select * from users")
     rows = cur.fetchall()
     return render_template('userlist.html', rows = rows)
+
+@app.route('/statistic', methods= ['GET'])
+def put_statistic():
+    con = sqlite3.connect(db_path)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    cur.execute("select * from users")
+    data_info = cur.fetchall()
+    print(data_info)
+
+    return render_template('statistic.html')
+
+@app.route('/statistic', methods= ['POST'])
+def get_statistic():
+    con = sqlite3.connect(db_path)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+    cur.execute("select * from users")
+    data_info = cur.fetchall()
+    print(data_info)
+
+'''
+@app.route('/download')
+def downloadFile ():
+    #For windows you need to use drive name [ex: F:/Example.pdf]
+    return send_from_directory(directory=FILES_FOLDER, filename="WL-2.pdf")
+'''
 
 if __name__ == '__main__':
 

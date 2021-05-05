@@ -4,16 +4,16 @@
 <body style="background-color:white;">
 <h1 align="center">Statistics</h1>
 
-<form align ="left" action="/statistics" method='POST'>
+<form align ="left" action="/statistic" method='POST'>
   <label for="plot">Choose a plot(Graph):</label>
-  <select name="city" id="city">
+  <select name="plot" id="city">
 	<option value="Line Graph">Line Graph</option>
     <option value="Bar Graph">Bar Graph</option>
     <option value="Histogram">Histogram</option>
     <option value="Scatter Plot">Scatter plot</option>
     <option value="Pie Chart">Pie Chart</option>
    </select> <br> <br>
-    <input type="submit" value="Download all Graphs(in pdf)">
+    <input type="submit" name="showall" value="Show all graph">
   </select> <br> <br>
     <input type="submit" value="Submit">
   </form>

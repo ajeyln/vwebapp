@@ -17,7 +17,6 @@ app = Flask(__name__, template_folder='template')
 
 INDEX_IMAGES = os.path.join("static", "images")
 IMAGES_FOLDER = os.path.join("static", "plotter_images")
-PDF_FOLDER = os.path.join("static", "statistics")
 
 @app.errorhandler(404)
 def page_notfound(self):
@@ -114,48 +113,6 @@ def user_list():
     rows = cur.fetchall()
     return render_template('userlist.html', rows = rows)
 
-@app.route('/statistic', methods= ['GET'])
-def get_statistic():
-    return render_template('statistic.html')
-
-@app.route('/statistic', methods= ['POST'])
-def put_statistic():
-    con = sqlite3.connect(db_path)
-    cur = con.cursor()
-    cur.execute("select * from users ")
-    rows = cur.fetchall()
-    user_list = []
-    [user_list.append(list(row)) for row in rows]
-    users_dataframe = pd.DataFrame(rows, columns=['SR_No','FIRST_NAME','SECOND_NAME','AGE','GENDER','CITY'])
-    if request.form['plot'] == 'Line Graph':
-        MESSAGE1_T = "Statistical Image(Line Graph)"
-        MESSAGE1 = "The line graph shows Employee count with respect to their Cities."
-        IMAGE_FILE1 = create_line_graph(user_list, users_dataframe)
-        return render_template('plot.html', msg1=MESSAGE1_T, msg2=MESSAGE1,image = IMAGE_FILE1)
-
-    elif request.form['plot'] == 'Bar Graph':
-        MESSAGE2_T = "Statistical Image(Bar Graph)"
-        MESSAGE2 = "The bar graph shows Employee count with respect to their Second Names."
-        IMAGE_FILE2 = create_bar_graph(user_list, users_dataframe)
-        return render_template('plot.html', msg1=MESSAGE2_T, msg2=MESSAGE2,image = IMAGE_FILE2)
-
-    elif request.form['plot'] == 'Histogram':
-        MESSAGE3_T = "Statistical Image(Histogram)"
-        MESSAGE3 = "In this section, we are plotting the graph based on User age with duration of 10 Years"
-        IMAGE_FILE3 = create_histogram(users_dataframe)
-        return render_template('plot.html', msg1=MESSAGE3_T, msg2=MESSAGE3,image = IMAGE_FILE3)
-
-    elif request.form['plot'] == 'Scatter Plot':
-        MESSAGE4_T = "Statistical Image(Scatter Plot)"
-        MESSAGE4 = "The scatter graph shows the Age of Male and Female based on their Cities."
-        IMAGE_FILE4 = create_scatter_plot(users_dataframe)
-        return render_template('plot.html', msg1=MESSAGE4_T, msg2=MESSAGE4,image = IMAGE_FILE4)
-    else:
-        MESSAGE5_T = "Statistical Image(Pie Chart)"
-        MESSAGE5 = "Percentagewise City of Users"
-        IMAGE_FILE5 = create_pie_chart(users_dataframe)
-        return render_template('plot.html', msg1=MESSAGE5_T, msg2=MESSAGE5,image = IMAGE_FILE5)
-
 def create_line_graph(user_list, users_dataframe):
     style.use('ggplot')
     city_name = users_dataframe['CITY'].to_list()
@@ -195,7 +152,9 @@ def create_line_graph(user_list, users_dataframe):
     plt.legend(loc ="upper right", prop={"size":10})
     IMAGE_FILE = os.path.join(IMAGES_FOLDER,"01_line_plot.png")
     plt.savefig(IMAGE_FILE)
-    return IMAGE_FILE
+    MESSAGE1 = "Statistical Image(Line Graph)"
+    MESSAGE2 = "The line graph shows Employee count with respect to their Cities."
+    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
 
 def create_histogram(users_dataframe):
     age_users = users_dataframe['AGE'].to_list()
@@ -208,7 +167,9 @@ def create_histogram(users_dataframe):
     plt.legend(loc ="upper right", prop={"size":10})
     IMAGE_FILE = os.path.join(IMAGES_FOLDER, "03_histogram.png")
     plt.savefig(IMAGE_FILE)
-    return IMAGE_FILE
+    MESSAGE1 = "Statistical Image(Histogram)"
+    MESSAGE2 = "In this section, we are plotting the graph based on User age with duration of 10 Years"
+    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
 
 def create_bar_graph(user_list, users_dataframe):
     width = 0.2
@@ -249,7 +210,9 @@ def create_bar_graph(user_list, users_dataframe):
     plt.legend(loc ="upper right", prop={"size":10})
     IMAGE_FILE = os.path.join(IMAGES_FOLDER,"02_bar_graph.png")
     plt.savefig(IMAGE_FILE)
-    return IMAGE_FILE
+    MESSAGE1 = "Statistical Image(Bar Graph)"
+    MESSAGE2 = "The bar graph shows Employee count with respect to their Second Names."
+    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
 
 def create_scatter_plot(users_dataframe):
     female_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Female"]
@@ -272,7 +235,9 @@ def create_scatter_plot(users_dataframe):
     plt.legend(loc ="upper right", prop={"size":10})
     IMAGE_FILE = os.path.join(IMAGES_FOLDER, "04_scatter_plot.png")
     plt.savefig(IMAGE_FILE)
-    return IMAGE_FILE
+    MESSAGE1 = "Statistical Image(Scatter Plot)"
+    MESSAGE2 = "The scatter graph shows the Age of Male and Female based on their Cities."
+    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
 
 def create_pie_chart(users_dataframe):
     city_karkala = users_dataframe.loc[users_dataframe["CITY"] == "Karkala"]
@@ -300,10 +265,11 @@ def create_pie_chart(users_dataframe):
     plt.legend()
     IMAGE_FILE = os.path.join(IMAGES_FOLDER, '05_pie_chart.png')
     plt.savefig(IMAGE_FILE)
-    return IMAGE_FILE
+    MESSAGE1 = "Statistical Image(Pie Chart)"
+    MESSAGE2 = "Percentagewise City of Users"
+    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
 
-@app.route('/download')
-def create_pdf():
+def downloadFile():
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_font("Arial", size = 15)
@@ -323,12 +289,49 @@ def create_pdf():
     pdf.cell(200, 10, txt= "Percentagewise City of Users ",ln = 10, align = "l")
     file_image5 = os.path.join(IMAGES_FOLDER, "05_pie_chart.png")
     pdf.image(file_image5, x = None, y = None, w=700/5, h=450/5, type = 'png', link = '')
-    PDF_FILE = os.path.join(PDF_FOLDER, "Statistic.pdf")
-    if os.path.exists(PDF_FILE):
-        os.remove(PDF_FILE)
+    PDF_FILE = "Statistic.pdf"
     pdf.output(PDF_FILE,'F')
-    msg = f"The files sucessfully downloaded in this location : {PDF_FILE}"
-    return render_template('download.html', msg = msg,)
+    return PDF_FILE
+
+@app.route('/statistic', methods= ['GET'])
+def get_statistic():
+    return render_template('statistic.html')
+
+@app.route('/statistic', methods= ['POST'])
+def put_statistic():
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+    cur.execute("select * from users ")
+    rows = cur.fetchall()
+    user_list = []
+    [user_list.append(list(row)) for row in rows]
+    users_dataframe = pd.DataFrame(rows, columns=['SR_No','FIRST_NAME','SECOND_NAME','AGE','GENDER','CITY'])
+    if request.form['plot'] == 'Line Graph':
+        line_graph = create_line_graph(user_list, users_dataframe)
+        return line_graph
+
+    elif request.form['plot'] == 'Bar Graph':
+        bar_graph = create_bar_graph(user_list, users_dataframe)
+        return bar_graph
+
+    elif request.form['plot'] == 'Histogram':
+        histogram = create_histogram(users_dataframe)
+        return histogram
+
+    elif request.form['plot'] == 'Scatter Plot':
+        scatter_plot = create_scatter_plot(users_dataframe)
+        return scatter_plot
+
+    elif request.form['plot'] == 'Pie Chart':
+        pie_chart = create_pie_chart(users_dataframe)
+        return pie_chart
+
+    else:
+        PDF_FILE = downloadFile()
+        PDF_FOLDER = os.path.join("static", "statistics")
+        if os.path.exists(PDF_FILE):
+            os.remove(PDF_FILE)
+        return send_from_directory(directory=PDF_FOLDER, filename=PDF_FILE)
 
 if __name__ == '__main__':
 

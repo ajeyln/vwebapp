@@ -10,13 +10,14 @@ import pandas as pd
 from fpdf import FPDF
 import numpy as np
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-db_path = os.path.join(BASE_DIR, "user_data.db")
 CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
-FILE_NAME1 = os.path.join(CURRENT_DIR, "static")
-FILE_NAME = os.path.join(FILE_NAME1, "plotter_images")
+db_path = os.path.join(CURRENT_DIR, "user_data.db")
 
 app = Flask(__name__, template_folder='template')
+
+INDEX_IMAGES = os.path.join("static", "images")
+IMAGES_FOLDER = os.path.join("static", "plotter_images")
+PDF_FOLDER = os.path.join("static", "statistics")
 
 @app.errorhandler(404)
 def page_notfound(self):
@@ -26,7 +27,9 @@ def page_notfound(self):
 @app.route('/home/')
 def get_home():
     get_header()
-    return render_template('index.html')
+    image1= os.path.join(INDEX_IMAGES, "svt.jpg")
+    image2= os.path.join(INDEX_IMAGES, "svt1.jpg")
+    return render_template('index.html', image1=image1, image2=image2)
 
 @app.route('/contact')
 def get_contactinfor():
@@ -124,81 +127,75 @@ def put_statistic():
     user_list = []
     [user_list.append(list(row)) for row in rows]
     users_dataframe = pd.DataFrame(rows, columns=['SR_No','FIRST_NAME','SECOND_NAME','AGE','GENDER','CITY'])
-    if request.form['plot'] == 'Line Graph' or request.form['plot'] == 'Bar Graph':
-        if request.form['plot'] == 'Line Graph':
-            create_line_graph(user_list, users_dataframe)
-        else:
-            create_bar_graph(user_list, users_dataframe)
-    elif request.form['plot'] == 'Histogram' or request.form['plot'] == 'Scatter Plot':
-        if request.form['plot'] == 'Histogram':
-            create_histogram(users_dataframe)
-        else:
-            create_scatter_plot(users_dataframe)
+    if request.form['plot'] == 'Line Graph':
+        MESSAGE1_T = "Statistical Image(Line Graph)"
+        MESSAGE1 = "The line graph shows Employee count with respect to their Cities."
+        IMAGE_FILE1 = create_line_graph(user_list, users_dataframe)
+        return render_template('plot.html', msg1=MESSAGE1_T, msg2=MESSAGE1,image = IMAGE_FILE1)
+
+    elif request.form['plot'] == 'Bar Graph':
+        MESSAGE2_T = "Statistical Image(Bar Graph)"
+        MESSAGE2 = "The bar graph shows Employee count with respect to their Second Names."
+        IMAGE_FILE2 = create_bar_graph(user_list, users_dataframe)
+        return render_template('plot.html', msg1=MESSAGE2_T, msg2=MESSAGE2,image = IMAGE_FILE2)
+
+    elif request.form['plot'] == 'Histogram':
+        MESSAGE3_T = "Statistical Image(Histogram)"
+        MESSAGE3 = "In this section, we are plotting the graph based on User age with duration of 10 Years"
+        IMAGE_FILE3 = create_histogram(users_dataframe)
+        return render_template('plot.html', msg1=MESSAGE3_T, msg2=MESSAGE3,image = IMAGE_FILE3)
+
+    elif request.form['plot'] == 'Scatter Plot':
+        MESSAGE4_T = "Statistical Image(Scatter Plot)"
+        MESSAGE4 = "The scatter graph shows the Age of Male and Female based on their Cities."
+        IMAGE_FILE4 = create_scatter_plot(users_dataframe)
+        return render_template('plot.html', msg1=MESSAGE4_T, msg2=MESSAGE4,image = IMAGE_FILE4)
     else:
-        if request.form['plot'] == 'Pie Chart':
-            create_pie_chart(users_dataframe)
+        MESSAGE5_T = "Statistical Image(Pie Chart)"
+        MESSAGE5 = "Percentagewise City of Users"
+        IMAGE_FILE5 = create_pie_chart(users_dataframe)
+        return render_template('plot.html', msg1=MESSAGE5_T, msg2=MESSAGE5,image = IMAGE_FILE5)
 
 def create_line_graph(user_list, users_dataframe):
     style.use('ggplot')
-    female_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Female"]
-    city_name_female = female_dataframe['CITY'].to_list()
-    city_users_female = []
-    [city_users_female.append(x) for x in city_name_female if x not in city_users_female]
-    print(city_users_female)
-
-    male_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Male"]
-    city_name_male = male_dataframe['CITY'].to_list()
-    city_users_male = []
-    [city_users_male.append(y) for y in city_name_male if y not in city_users_male]
-    print(city_users_male)
-
-    other_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Other"]
-    city_name_other = other_dataframe['CITY'].to_list()
-    city_users_other = []
-    [city_users_other.append(z) for z in city_name_other if z not in city_users_other]
-    print(city_users_other)
+    city_name = users_dataframe['CITY'].to_list()
+    users_city = []
+    [users_city.append(z) for z in city_name if z not in users_city]
     
-    for i in range(0, len(city_users_female)):
+    female_count = []
+    for i in range(0, len(users_city)):
         count_female = 0
-        female_count = []
         for j in range(0, len(user_list)):
-            if user_list[j][4] == "Female" and user_list[j][5] == city_users_female[i]:
+            if user_list[j][4] == "Female" and user_list[j][5] == users_city[i]:
                 count_female += 1
         female_count.append(count_female)
-    print(female_count)
 
-    for k in range(0, len(city_users_male)):
-        male_count = []
-        print(city_users_male[k])
+    male_count = []
+    for k in range(0, len(users_city)):
         count_male = 0
         for l in range(0, len(user_list)):
-            if user_list[l][4] == "Male" and user_list[l][5] == city_users_male[k]:
+            if user_list[l][4] == "Male" and user_list[l][5] == users_city[k]:
                 count_male += 1
-                print(count_male)
-            male_count.append(count_male)
-    print(male_count)
+        male_count.append(count_male)
 
-    for m in range(0, len(city_users_other)):
+    other_count = []
+    for m in range(0, len(users_city)):
         count_other = 0
-        other_count = []
         for n in range(0, len(user_list)):
-            if user_list[n][4] == "Other" and user_list[n][5] == city_users_other[m]:
+            if user_list[n][4] == "Other" and user_list[n][5] == users_city[m]:
                 count_other += 1
         other_count.append(count_other)
-    print(other_count)
 
-    plt.plot(city_users_female,female_count,'b',label='Female', linewidth=5)
-    # plt.plot(city_users_male,male_count,'g',label='Male', linewidth=5)
-    plt.plot(city_users_other,other_count,'r',label='Other',linewidth=5)
+    plt.plot(users_city,female_count,'b',label='Female', linewidth=5)
+    plt.plot(users_city,male_count,'g',label='Male', linewidth=5)
+    plt.plot(users_city,other_count,'r',label='Other',linewidth=5)
     plt.title('Residence of Cities')
     plt.ylabel('Count')
     plt.xlabel('City Name')
     plt.legend(loc ="upper right", prop={"size":10})
-    filepath = os.path.join(FILE_NAME,"01_line_plot.png")
-    plt.savefig(filepath)
-    msg = "The line graph shows Employee count with respect to their Cities."
-    image_path = os.path.join(FILE_NAME, "01_line_plot.png")
-    return render_template('plot.html', msg = msg, image = image_path)
+    IMAGE_FILE = os.path.join(IMAGES_FOLDER,"01_line_plot.png")
+    plt.savefig(IMAGE_FILE)
+    return IMAGE_FILE
 
 def create_histogram(users_dataframe):
     age_users = users_dataframe['AGE'].to_list()
@@ -209,73 +206,50 @@ def create_histogram(users_dataframe):
     plt.ylabel('Count')
     plt.xlabel('Age')
     plt.legend(loc ="upper right", prop={"size":10})
-    filepath = os.path.join(FILE_NAME, "03_histogram.png")
-    plt.savefig(filepath)
-    msg = "In this section, we are plotting the graph based on User age with duration of 10 Years"
-    image_path = os.path.join(FILE_NAME, "03_histogram.png")
-    return render_template('plot.html', msg = msg, image = image_path)
+    IMAGE_FILE = os.path.join(IMAGES_FOLDER, "03_histogram.png")
+    plt.savefig(IMAGE_FILE)
+    return IMAGE_FILE
 
 def create_bar_graph(user_list, users_dataframe):
     width = 0.2
-    female_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Female"]
-    sur_name_female = female_dataframe['SECOND_NAME'].to_list()
-    sec_name_female = []
-    [sec_name_female.append(x) for x in sur_name_female if x not in sec_name_female]
-    print(sec_name_female)
+    sur_name = users_dataframe['SECOND_NAME'].to_list()
+    sec_name = []
+    [sec_name.append(x) for x in sur_name if x not in sec_name]
 
-    male_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Male"]
-    sur_name_male = male_dataframe['SECOND_NAME'].to_list()
-    sec_name_male = []
-    [sec_name_male.append(y) for y in sur_name_male if y not in sec_name_male]
-    print(sec_name_male)
-
-    other_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Other"]
-    sur_name_other = other_dataframe['SECOND_NAME'].to_list()
-    sec_name_other = []
-    [sec_name_other.append(z) for z in sur_name_other if z not in sec_name_other]
-    print(sec_name_other)
-
-    for i in range(0, len(sec_name_female)):
+    female_count = []
+    for i in range(0, len(sec_name)):
         count_female = 0
-        female_count = []
         for j in range(0, len(user_list)):
-            if user_list[j][2] == sec_name_female[i] and user_list[j][4] == "Female":
+            if user_list[j][2] == sec_name[i] and user_list[j][4] == "Female":
                 count_female += 1
         female_count.append(count_female)
-    print(female_count)
 
-    for k in range(0, len(sec_name_male)):
-        male_count = []
-        print(sec_name_male[k])
+    male_count = []
+    for k in range(0, len(sec_name)):
         count_male = 0
         for l in range(0, len(user_list)):
-            if user_list[l][2] == sec_name_male[k] and user_list[l][4] == "Male":
+            if user_list[l][2] == sec_name[k] and user_list[l][4] == "Male":
                 count_male += 1
-                print(count_male)
         male_count.append(count_male)
-    print(male_count)
 
-    for m in range(0, len(sec_name_other)):
+    other_count = []
+    for m in range(0, len(sec_name)):
         count_other = 0
-        other_count = []
         for n in range(0, len(user_list)):
-            if user_list[n][2] == sec_name_other[m] and user_list[n][4] == "Other":
+            if user_list[n][2] == sec_name[m] and user_list[n][4] == "Other":
                 count_other += 1
         other_count.append(count_other)
-    print(other_count)
 
-    plt.bar(sec_name_female,female_count, label="Female",color='b', width=width)
-    plt.bar(sec_name_male,male_count, label="Male",color='g', width=width)
-    plt.bar(sec_name_other,other_count, label="Other", color='r', width=width)
+    plt.bar(sec_name,female_count, label="Female",color='b', width=width)
+    plt.bar(sec_name,male_count, label="Male",color='g', width=width)
+    plt.bar(sec_name,other_count, label="Other", color='r', width=width)
     plt.title('User details with their Second Names')
     plt.ylabel('Count')
     plt.xlabel('Year')
     plt.legend(loc ="upper right", prop={"size":10})
-    filepath = os.path.join(FILE_NAME,"02_bar_graph.png")
-    plt.savefig(filepath)
-    msg = "The bar graph shows Employee count with respect to their Second Names."
-    image_path = os.path.join(FILE_NAME, "02_bar_graph.png")
-    return render_template('plot.html', msg = msg, image = image_path)
+    IMAGE_FILE = os.path.join(IMAGES_FOLDER,"02_bar_graph.png")
+    plt.savefig(IMAGE_FILE)
+    return IMAGE_FILE
 
 def create_scatter_plot(users_dataframe):
     female_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Female"]
@@ -296,11 +270,9 @@ def create_scatter_plot(users_dataframe):
     plt.ylabel('City')
     plt.xlabel('Age')
     plt.legend(loc ="upper right", prop={"size":10})
-    filepath = os.path.join(FILE_NAME, "04_scatter_plot.png")
-    plt.savefig(filepath)
-    msg = "The scatter graph shows the Age of Male and Female based on their Cities."
-    image_path = os.path.join(FILE_NAME, "04_scatter_plot.png")
-    return render_template('plot.html', msg = msg, image = image_path)
+    IMAGE_FILE = os.path.join(IMAGES_FOLDER, "04_scatter_plot.png")
+    plt.savefig(IMAGE_FILE)
+    return IMAGE_FILE
 
 def create_pie_chart(users_dataframe):
     city_karkala = users_dataframe.loc[users_dataframe["CITY"] == "Karkala"]
@@ -315,7 +287,6 @@ def create_pie_chart(users_dataframe):
     count_bangalore_user = len(city_bangalore.index)
     count_udupi_user = len(city_udupi.index)
     count_kundapura_user = len(city_kundapura.index)
-
     slices = [count_karkala_user, count_mangalore_user, count_mumbai_user, count_bangalore_user, count_udupi_user, count_kundapura_user]
     Age_of_Employees = ['Karkala','Mangalore','Mumbai','Bangalore','Udupi','Kundapura']
     cols = ['lightgray','coral','yellow','red','mediumpurple','lightblue']
@@ -327,46 +298,37 @@ def create_pie_chart(users_dataframe):
     autopct='%1.1f%%')
     plt.title('Residence of Users')
     plt.legend()
-    filepath = os.path.join(FILE_NAME, '05_pie_chart.png')
-    plt.savefig(filepath)
-    msg = "Percentagewise City of Users "
-    image_path = os.path.join(FILE_NAME, "05_pie_chart.png")
-    return render_template('plot.html', msg = msg, image = image_path)
+    IMAGE_FILE = os.path.join(IMAGES_FOLDER, '05_pie_chart.png')
+    plt.savefig(IMAGE_FILE)
+    return IMAGE_FILE
 
+@app.route('/download')
 def create_pdf():
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_font("Arial", size = 15)
     pdf.cell(225, 10, txt= "Statistical Report", ln = 1, align = "C")
     pdf.multi_cell(200, 10, txt= "The line graph shows Employee count with respect to their Cities.", align = "l")
-    file_image1 = os.path.join(FILE_NAME, "01_line_plot.png")
+    file_image1 = os.path.join(IMAGES_FOLDER, "01_line_plot.png")
     pdf.image(file_image1, x = None, y = None, w=700/5, h=450/5, type = '')
     pdf.cell(200, 10, txt=  "The bar graph shows Employee count with respect to their Second Names.", ln = 4, align = "l")
-    file_image2 = os.path.join(FILE_NAME, "02_bar_graph.png")
+    file_image2 = os.path.join(IMAGES_FOLDER, "02_bar_graph.png")
     pdf.image(file_image2, x = None, y = None, w=700/5, h=450/5, type = '')
     pdf.cell(200, 10, txt= "In this section, we are plotting the graph based on User age with duration of 10 Years", ln = 6, align = "l")
-    file_image3 = os.path.join(FILE_NAME, "03_histogram.png")
+    file_image3 = os.path.join(IMAGES_FOLDER, "03_histogram.png")
     pdf.image(file_image3, x = None, y = None, w=700/5, h=450/5, type = '')
     pdf.cell(200, 10, txt= "The scatter graph shows the Age of Male and Female based on their Cities.", ln = 8, align = "l")
-    file_image4 = os.path.join(FILE_NAME, "04_scatter_plot.png")
+    file_image4 = os.path.join(IMAGES_FOLDER, "04_scatter_plot.png")
     pdf.image(file_image4, x = None, y = None, w=700/5, h=450/5, type = '')
     pdf.cell(200, 10, txt= "Percentagewise City of Users ",ln = 10, align = "l")
-    file_image5 = os.path.join(FILE_NAME, "05_pie_chart.png")
+    file_image5 = os.path.join(IMAGES_FOLDER, "05_pie_chart.png")
     pdf.image(file_image5, x = None, y = None, w=700/5, h=450/5, type = 'png', link = '')
-    #if os.path.exists("userlist.html"):
-        #os.remove("userlist.html")
-    file_path = os.path.join(CURRENT_DIR, "static")
-    pdf_path = os.path.join(file_path, "statistics")
-    files_folder = os.path.join(pdf_path, "Statistic.pdf")
-    pdf.output(files_folder,'F')
-
-@app.route('/download')
-def downloadFile ():
-    create_pdf()
-    file_path = os.path.join(CURRENT_DIR, "static")
-    pdf_path = os.path.join(file_path, "statistics")
-    files_folder = os.path.join(pdf_path, "Statistic.pdf")
-    return send_from_directory(directory=files_folder, filename="Statistic.pdf")
+    PDF_FILE = os.path.join(PDF_FOLDER, "Statistic.pdf")
+    if os.path.exists(PDF_FILE):
+        os.remove(PDF_FILE)
+    pdf.output(PDF_FILE,'F')
+    msg = f"The files sucessfully downloaded in this location : {PDF_FILE}"
+    return render_template('download.html', msg = msg,)
 
 if __name__ == '__main__':
 

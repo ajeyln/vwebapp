@@ -273,7 +273,7 @@ def create_bar_graph(user_list, users_dataframe):
     plt.legend(loc ="upper right", prop={"size":10})
     filepath = os.path.join(FILE_NAME,"02_bar_graph.png")
     plt.savefig(filepath)
-    msg = "The line graph shows Employee count with respect to their Second Names."
+    msg = "The bar graph shows Employee count with respect to their Second Names."
     image_path = os.path.join(FILE_NAME, "02_bar_graph.png")
     return render_template('plot.html', msg = msg, image = image_path)
 
@@ -333,32 +333,39 @@ def create_pie_chart(users_dataframe):
     image_path = os.path.join(FILE_NAME, "05_pie_chart.png")
     return render_template('plot.html', msg = msg, image = image_path)
 
-def create_pdf(cur):
+def create_pdf():
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_font("Arial", size = 15)
     pdf.cell(225, 10, txt= "Statistical Report", ln = 1, align = "C")
-    pdf.multi_cell(200, 10, txt= "The line graph shows Employee count with respect to their joining year and there are two lines, one reprsents to Female and another to Male in a company.", align = "l")
+    pdf.multi_cell(200, 10, txt= "The line graph shows Employee count with respect to their Cities.", align = "l")
     file_image1 = os.path.join(FILE_NAME, "01_line_plot.png")
     pdf.image(file_image1, x = None, y = None, w=700/5, h=450/5, type = '')
-    pdf.cell(200, 10, txt= "In this task, The Bar graph shows the Average salary of the Female and Male based on their joing years.", ln = 4, align = "l")
+    pdf.cell(200, 10, txt=  "The bar graph shows Employee count with respect to their Second Names.", ln = 4, align = "l")
     file_image2 = os.path.join(FILE_NAME, "02_bar_graph.png")
     pdf.image(file_image2, x = None, y = None, w=700/5, h=450/5, type = '')
-    pdf.cell(200, 10, txt= "In this section, we are plotting the graph based on Employees age with duration of 5 Years.", ln = 6, align = "l")
+    pdf.cell(200, 10, txt= "In this section, we are plotting the graph based on User age with duration of 10 Years", ln = 6, align = "l")
     file_image3 = os.path.join(FILE_NAME, "03_histogram.png")
     pdf.image(file_image3, x = None, y = None, w=700/5, h=450/5, type = '')
-    pdf.cell(200, 10, txt= "The scatter graph shows the salary of Male and Female based on their experience on company.", ln = 8, align = "l")
+    pdf.cell(200, 10, txt= "The scatter graph shows the Age of Male and Female based on their Cities.", ln = 8, align = "l")
     file_image4 = os.path.join(FILE_NAME, "04_scatter_plot.png")
     pdf.image(file_image4, x = None, y = None, w=700/5, h=450/5, type = '')
-    pdf.cell(200, 10, txt= "In the Piechart, we can find the agewise employee percentage of company.",ln = 10, align = "l")
+    pdf.cell(200, 10, txt= "Percentagewise City of Users ",ln = 10, align = "l")
     file_image5 = os.path.join(FILE_NAME, "05_pie_chart.png")
     pdf.image(file_image5, x = None, y = None, w=700/5, h=450/5, type = 'png', link = '')
-    pdf_path = os.path.join(CURRENT_DIR, "statistics")
-    pdf_file = os.path.join(pdf_path, "Statistic.pdf")
-    pdf.output(pdf_file,'F')
+    #if os.path.exists("userlist.html"):
+        #os.remove("userlist.html")
+    file_path = os.path.join(CURRENT_DIR, "static")
+    pdf_path = os.path.join(file_path, "statistics")
+    files_folder = os.path.join(pdf_path, "Statistic.pdf")
+    pdf.output(files_folder,'F')
 
 @app.route('/download')
 def downloadFile ():
+    create_pdf()
+    file_path = os.path.join(CURRENT_DIR, "static")
+    pdf_path = os.path.join(file_path, "statistics")
+    files_folder = os.path.join(pdf_path, "Statistic.pdf")
     return send_from_directory(directory=files_folder, filename="Statistic.pdf")
 
 if __name__ == '__main__':

@@ -15,8 +15,7 @@ db_path = os.path.join(CURRENT_DIR, "user_data.db")
 
 app = Flask(__name__, template_folder='template')
 
-INDEX_IMAGES = os.path.join("static", "images")
-IMAGES_FOLDER = os.path.join("static", "plotter_images")
+IMAGES_FOLDER = os.path.join("static", "images")
 
 @app.errorhandler(404)
 def page_notfound(self):
@@ -26,8 +25,8 @@ def page_notfound(self):
 @app.route('/home/')
 def get_home():
     get_header()
-    image1= os.path.join(INDEX_IMAGES, "svt.jpg")
-    image2= os.path.join(INDEX_IMAGES, "svt1.jpg")
+    image1= os.path.join(IMAGES_FOLDER, "svt.jpg")
+    image2= os.path.join(IMAGES_FOLDER, "svt1.jpg")
     return render_template('index.html', image1=image1, image2=image2)
 
 @app.route('/contact')
@@ -113,6 +112,57 @@ def user_list():
     rows = cur.fetchall()
     return render_template('userlist.html', rows = rows)
 
+@app.route('/statistic', methods= ['GET'])
+def get_statistic():
+    return render_template('statistic.html')
+
+@app.route('/statistic', methods= ['POST'])
+def put_statistic():
+    con = sqlite3.connect(db_path)
+    cur = con.cursor()
+    cur.execute("select * from users ")
+    rows = cur.fetchall()
+    user_list = []
+    [user_list.append(list(row)) for row in rows]
+    users_dataframe = pd.DataFrame(rows, columns=['SR_No','FIRST_NAME','SECOND_NAME','AGE','GENDER','CITY'])
+
+    if request.form['plot'] == 'Line Graph':
+        IMAGE_FILE_1 = create_line_graph(user_list, users_dataframe)
+        MESSAGE1 = "Statistical Image(Line Graph)"
+        MESSAGE2 = "The line graph shows Employee count with respect to their Cities."
+        return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2, image = IMAGE_FILE_1)
+
+    elif request.form['plot'] == 'Bar Graph':
+        IMAGE_FILE_2 = create_bar_graph(user_list, users_dataframe)
+        MESSAGE3 = "Statistical Image(Bar Graph)"
+        MESSAGE4 = "The bar graph shows Employee count with respect to their Second Names."
+        return render_template('plot.html', msg1=MESSAGE3, msg2=MESSAGE4, image = IMAGE_FILE_2)
+
+    elif request.form['plot'] == 'Histogram':
+        IMAGE_FILE_3 = create_histogram(users_dataframe)
+        MESSAGE5 = "Statistical Image(Histogram)"
+        MESSAGE6 = "In this section, we are plotting the graph based on User age with duration of 10 Years"
+        return render_template('plot.html', msg1=MESSAGE5, msg2=MESSAGE6, image = IMAGE_FILE_3)
+
+    elif request.form['plot'] == 'Scatter Plot':
+        IMAGE_FILE_4 = create_scatter_plot(users_dataframe)
+        MESSAGE7 = "Statistical Image(Scatter Plot)"
+        MESSAGE8 = "The scatter graph shows the Age of Male and Female based on their Cities."
+        return render_template('plot.html', msg1=MESSAGE7, msg2=MESSAGE8, image = IMAGE_FILE_4)
+
+    elif request.form['plot'] == 'Pie Chart':
+        IMAGE_FILE_5 = create_pie_chart(users_dataframe)
+        MESSAGE9 = "Statistical Image(Pie Chart)"
+        MESSAGE10 = "Percentagewise City of Users"
+        return render_template('plot.html', msg1=MESSAGE9, msg2=MESSAGE10, image = IMAGE_FILE_5)
+
+    else:
+        PDF_FILE = downloadFile()
+        PDF_FOLDER = os.path.join("static", "statistics")
+        if os.path.exists(PDF_FILE):
+            os.remove(PDF_FILE)
+        return send_from_directory(directory=PDF_FOLDER, filename=PDF_FILE)
+
 def create_line_graph(user_list, users_dataframe):
     style.use('ggplot')
     city_name = users_dataframe['CITY'].to_list()
@@ -142,7 +192,7 @@ def create_line_graph(user_list, users_dataframe):
             if user_list[n][4] == "Other" and user_list[n][5] == users_city[m]:
                 count_other += 1
         other_count.append(count_other)
-
+    plt.figure()
     plt.plot(users_city,female_count,'b',label='Female', linewidth=5)
     plt.plot(users_city,male_count,'g',label='Male', linewidth=5)
     plt.plot(users_city,other_count,'r',label='Other',linewidth=5)
@@ -152,26 +202,31 @@ def create_line_graph(user_list, users_dataframe):
     plt.legend(loc ="upper right", prop={"size":10})
     IMAGE_FILE = os.path.join(IMAGES_FOLDER,"01_line_plot.png")
     plt.savefig(IMAGE_FILE)
-    MESSAGE1 = "Statistical Image(Line Graph)"
-    MESSAGE2 = "The line graph shows Employee count with respect to their Cities."
-    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return IMAGE_FILE
 
 def create_histogram(users_dataframe):
+    style.use('ggplot')
     age_users = users_dataframe['AGE'].to_list()
     bins = []
     [bins.append(x) for x in range(10,80,10)]
+    plt.figure()
     plt.hist(age_users, bins, histtype='bar', rwidth=0.3)
     plt.title('Age Info')
     plt.ylabel('Count')
     plt.xlabel('Age')
-    plt.legend(loc ="upper right", prop={"size":10})
+    plt.legend(loc ="upper left", prop={"size":10})
     IMAGE_FILE = os.path.join(IMAGES_FOLDER, "03_histogram.png")
     plt.savefig(IMAGE_FILE)
-    MESSAGE1 = "Statistical Image(Histogram)"
-    MESSAGE2 = "In this section, we are plotting the graph based on User age with duration of 10 Years"
-    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return IMAGE_FILE
 
 def create_bar_graph(user_list, users_dataframe):
+    style.use('ggplot')
     width = 0.2
     sur_name = users_dataframe['SECOND_NAME'].to_list()
     sec_name = []
@@ -200,21 +255,23 @@ def create_bar_graph(user_list, users_dataframe):
             if user_list[n][2] == sec_name[m] and user_list[n][4] == "Other":
                 count_other += 1
         other_count.append(count_other)
-
+    plt.figure()
     plt.bar(sec_name,female_count, label="Female",color='b', width=width)
     plt.bar(sec_name,male_count, label="Male",color='g', width=width)
     plt.bar(sec_name,other_count, label="Other", color='r', width=width)
     plt.title('User details with their Second Names')
     plt.ylabel('Count')
-    plt.xlabel('Year')
+    plt.xlabel('Second Name')
     plt.legend(loc ="upper right", prop={"size":10})
     IMAGE_FILE = os.path.join(IMAGES_FOLDER,"02_bar_graph.png")
     plt.savefig(IMAGE_FILE)
-    MESSAGE1 = "Statistical Image(Bar Graph)"
-    MESSAGE2 = "The bar graph shows Employee count with respect to their Second Names."
-    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return IMAGE_FILE
 
 def create_scatter_plot(users_dataframe):
+    style.use('ggplot')
     female_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Female"]
     age_female = female_dataframe["AGE"].to_list()
     city_female = female_dataframe["CITY"].to_list()
@@ -226,6 +283,7 @@ def create_scatter_plot(users_dataframe):
     other_dataframe = users_dataframe.loc[users_dataframe["GENDER"] == "Other"]
     age_other = other_dataframe["AGE"].to_list()
     city_other = other_dataframe["CITY"].to_list()
+    plt.figure()
     plt.scatter(city_female, age_female, label='Female',color='b')
     plt.scatter(city_male, age_male,label='Male',color='g')
     plt.scatter(city_other, age_other,label='Other',color='r')
@@ -235,11 +293,14 @@ def create_scatter_plot(users_dataframe):
     plt.legend(loc ="upper right", prop={"size":10})
     IMAGE_FILE = os.path.join(IMAGES_FOLDER, "04_scatter_plot.png")
     plt.savefig(IMAGE_FILE)
-    MESSAGE1 = "Statistical Image(Scatter Plot)"
-    MESSAGE2 = "The scatter graph shows the Age of Male and Female based on their Cities."
-    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return IMAGE_FILE
+
 
 def create_pie_chart(users_dataframe):
+    style.use('ggplot')
     city_karkala = users_dataframe.loc[users_dataframe["CITY"] == "Karkala"]
     city_mangalore = users_dataframe.loc[users_dataframe["CITY"] == "Mangalore"]
     city_mumbai = users_dataframe.loc[users_dataframe["CITY"] == "Mumbai"]
@@ -255,6 +316,7 @@ def create_pie_chart(users_dataframe):
     slices = [count_karkala_user, count_mangalore_user, count_mumbai_user, count_bangalore_user, count_udupi_user, count_kundapura_user]
     Age_of_Employees = ['Karkala','Mangalore','Mumbai','Bangalore','Udupi','Kundapura']
     cols = ['lightgray','coral','yellow','red','mediumpurple','lightblue']
+    plt.figure()
     plt.pie(slices,
     labels= Age_of_Employees,
     colors=cols,
@@ -265,9 +327,10 @@ def create_pie_chart(users_dataframe):
     plt.legend()
     IMAGE_FILE = os.path.join(IMAGES_FOLDER, '05_pie_chart.png')
     plt.savefig(IMAGE_FILE)
-    MESSAGE1 = "Statistical Image(Pie Chart)"
-    MESSAGE2 = "Percentagewise City of Users"
-    return render_template('plot.html', msg1=MESSAGE1, msg2=MESSAGE2,image = IMAGE_FILE)
+    plt.clf()
+    plt.cla()
+    plt.close()
+    return IMAGE_FILE
 
 def downloadFile():
     pdf = FPDF(orientation='P', unit='mm', format='A4')
@@ -293,46 +356,7 @@ def downloadFile():
     pdf.output(PDF_FILE,'F')
     return PDF_FILE
 
-@app.route('/statistic', methods= ['GET'])
-def get_statistic():
-    return render_template('statistic.html')
-
-@app.route('/statistic', methods= ['POST'])
-def put_statistic():
-    con = sqlite3.connect(db_path)
-    cur = con.cursor()
-    cur.execute("select * from users ")
-    rows = cur.fetchall()
-    user_list = []
-    [user_list.append(list(row)) for row in rows]
-    users_dataframe = pd.DataFrame(rows, columns=['SR_No','FIRST_NAME','SECOND_NAME','AGE','GENDER','CITY'])
-    if request.form['plot'] == 'Line Graph':
-        line_graph = create_line_graph(user_list, users_dataframe)
-        return line_graph
-
-    elif request.form['plot'] == 'Bar Graph':
-        bar_graph = create_bar_graph(user_list, users_dataframe)
-        return bar_graph
-
-    elif request.form['plot'] == 'Histogram':
-        histogram = create_histogram(users_dataframe)
-        return histogram
-
-    elif request.form['plot'] == 'Scatter Plot':
-        scatter_plot = create_scatter_plot(users_dataframe)
-        return scatter_plot
-
-    elif request.form['plot'] == 'Pie Chart':
-        pie_chart = create_pie_chart(users_dataframe)
-        return pie_chart
-
-    else:
-        PDF_FILE = downloadFile()
-        PDF_FOLDER = os.path.join("static", "statistics")
-        if os.path.exists(PDF_FILE):
-            os.remove(PDF_FILE)
-        return send_from_directory(directory=PDF_FOLDER, filename=PDF_FILE)
 
 if __name__ == '__main__':
 
-    app.run(port= 5555, debug = True)
+    app.run(port= 5556, debug = True)

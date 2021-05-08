@@ -157,7 +157,7 @@ def put_statistic():
         return render_template('plot.html', msg1=MESSAGE9, msg2=MESSAGE10, image = IMAGE_FILE_5)
 
     else:
-        PDF_FILE = downloadFile(user_list, users_dataframe)
+        PDF_FILE = downloadFile()
         PDF_FOLDER = os.path.join("static", "statistics")
         if os.path.exists(PDF_FILE):
             os.remove(PDF_FILE)
@@ -331,7 +331,7 @@ def create_pie_chart(users_dataframe):
     plt.close()
     return IMAGE_FILE
 
-def downloadFile(user_list, users_dataframe):
+def downloadFile():
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_font("Arial", size = 15)
@@ -358,4 +358,4 @@ def downloadFile(user_list, users_dataframe):
 
 if __name__ == '__main__':
 
-    app.run(port= 5050, debug = True)
+    app.run(port= 5556, debug = True)

@@ -147,7 +147,7 @@ def put_statistic():
     elif request.form['plot'] == 'Scatter Plot':
         IMAGE_FILE_4 = create_scatter_plot(users_dataframe)
         MESSAGE7 = "Statistical Image(Scatter Plot)"
-        MESSAGE8 = "The scatter graph shows the Age of Male and Female based on their Cities."
+        MESSAGE8 = "The scatter graph shows the Age of Male and Female based on their cities."
         return render_template('plot.html', msg1=MESSAGE7, msg2=MESSAGE8, image = IMAGE_FILE_4)
 
     elif request.form['plot'] == 'Pie Chart':
@@ -335,7 +335,7 @@ def downloadFile():
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_font("Arial", size = 15)
-    pdf.cell(225, 10, txt= "Statistical Report", ln = 1, align = "c")
+    pdf.cell(225, 10, txt= "User statistical report", ln = 1, align = "c")
     pdf.multi_cell(200, 10, txt= "The line graph shows Employee count with respect to their Cities.", align = "l")
     file_image1 = os.path.join(IMAGES_FOLDER,"01_line_plot.png")
     pdf.image(file_image1, x = None, y = None, w=700/5, h=450/5, type = '')
@@ -345,7 +345,7 @@ def downloadFile():
     pdf.cell(200, 10, txt= "In this section, we are plotting the graph based on User age with duration of 10 Years", ln = 6, align = "l")
     file_image3 = os.path.join(IMAGES_FOLDER, "03_histogram.png")
     pdf.image(file_image3, x = None, y = None, w=700/5, h=450/5, type = '')
-    pdf.cell(200, 10, txt= "The scatter graph shows the Age of Male and Female based on their Cities.", ln = 8, align = "l")
+    pdf.cell(200, 10, txt= "The scatter graph shows the Age of Male and Female based on their cities.", ln = 8, align = "l")
     file_image4 = os.path.join(IMAGES_FOLDER, "04_scatter_plot.png")
     pdf.image(file_image4, x = None, y = None, w=700/5, h=450/5, type = '')
     pdf.cell(200, 10, txt= "Percentagewise City of Users ",ln = 10, align = "l")

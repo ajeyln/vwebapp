@@ -157,7 +157,7 @@ def put_statistic():
         return render_template('plot.html', msg1=MESSAGE9, msg2=MESSAGE10, image = IMAGE_FILE_5)
 
     else:
-        PDF_FILE = downloadFile()
+        PDF_FILE = downloadFile(user_list, users_dataframe)
         PDF_FOLDER = os.path.join("static", "statistics")
         if os.path.exists(PDF_FILE):
             os.remove(PDF_FILE)
@@ -298,7 +298,6 @@ def create_scatter_plot(users_dataframe):
     plt.close()
     return IMAGE_FILE
 
-
 def create_pie_chart(users_dataframe):
     style.use('ggplot')
     city_karkala = users_dataframe.loc[users_dataframe["CITY"] == "Karkala"]
@@ -332,16 +331,16 @@ def create_pie_chart(users_dataframe):
     plt.close()
     return IMAGE_FILE
 
-def downloadFile():
+def downloadFile(user_list, users_dataframe):
     pdf = FPDF(orientation='P', unit='mm', format='A4')
     pdf.add_page()
     pdf.set_font("Arial", size = 15)
-    pdf.cell(225, 10, txt= "Statistical Report", ln = 1, align = "C")
+    pdf.cell(225, 10, txt= "Statistical Report", ln = 1, align = "c")
     pdf.multi_cell(200, 10, txt= "The line graph shows Employee count with respect to their Cities.", align = "l")
-    file_image1 = os.path.join(IMAGES_FOLDER, "01_line_plot.png")
+    file_image1 = os.path.join(IMAGES_FOLDER,"01_line_plot.png")
     pdf.image(file_image1, x = None, y = None, w=700/5, h=450/5, type = '')
     pdf.cell(200, 10, txt=  "The bar graph shows Employee count with respect to their Second Names.", ln = 4, align = "l")
-    file_image2 = os.path.join(IMAGES_FOLDER, "02_bar_graph.png")
+    file_image2 = os.path.join(IMAGES_FOLDER,"02_bar_graph.png")
     pdf.image(file_image2, x = None, y = None, w=700/5, h=450/5, type = '')
     pdf.cell(200, 10, txt= "In this section, we are plotting the graph based on User age with duration of 10 Years", ln = 6, align = "l")
     file_image3 = os.path.join(IMAGES_FOLDER, "03_histogram.png")
@@ -350,7 +349,7 @@ def downloadFile():
     file_image4 = os.path.join(IMAGES_FOLDER, "04_scatter_plot.png")
     pdf.image(file_image4, x = None, y = None, w=700/5, h=450/5, type = '')
     pdf.cell(200, 10, txt= "Percentagewise City of Users ",ln = 10, align = "l")
-    file_image5 = os.path.join(IMAGES_FOLDER, "05_pie_chart.png")
+    file_image5 = os.path.join(IMAGES_FOLDER, '05_pie_chart.png')
     pdf.image(file_image5, x = None, y = None, w=700/5, h=450/5, type = 'png', link = '')
     PDF_FILE = "Statistic.pdf"
     pdf.output(PDF_FILE,'F')
@@ -359,4 +358,4 @@ def downloadFile():
 
 if __name__ == '__main__':
 
-    app.run(port= 5556, debug = True)
+    app.run(port= 5050, debug = True)
